@@ -20,9 +20,9 @@ extension ObservableConvertibleType where Element == RepositoriesViewState {
     
     func asSections() -> Driver<[RepositoriesSection]> {
         return asObservable().map { viewState in
-            guard let state = viewState.repositories else { return [] }
+            guard let repositories = viewState.repositories else { return [] }
             let adapter = RepositoriesAdapter()
-            return adapter.generateSections(repositories: state)
+            return adapter.generateSections(repositories: repositories)
         }
         .asDriver(onErrorJustReturn: [])
     }

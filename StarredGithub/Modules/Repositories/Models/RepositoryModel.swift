@@ -5,4 +5,5 @@ struct Repository: Equatable {
     let authorName: String
     let starsCount: Int
     let photoUrl: URL
+    let descriptionText: String
 }

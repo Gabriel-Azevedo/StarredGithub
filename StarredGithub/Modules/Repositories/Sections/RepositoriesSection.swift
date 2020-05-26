@@ -11,6 +11,10 @@ struct RepositoriesSection: SectionModelType, Equatable {
             return .repositoryInformation(parameters: .init(repository: repository))
         })
     }
+    
+    init(repository: Repository) {
+        self.items = [.repositoryInformation(parameters: .init(repository: repository))]
+    }
 }
 
 extension RepositoriesSection {
@@ -29,11 +33,13 @@ struct RepositoryInformationParameters: Equatable {
     let authorName: String
     let starsCount: Int
     let photoUrl: URL
+    let descriptionText: String
     
     init(repository: Repository) {
         self.name = repository.name
         self.authorName = repository.authorName
         self.starsCount = repository.starsCount
         self.photoUrl = repository.photoUrl
+        self.descriptionText = repository.descriptionText
     }
 }

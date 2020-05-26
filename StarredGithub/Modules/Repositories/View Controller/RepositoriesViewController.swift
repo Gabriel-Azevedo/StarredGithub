@@ -5,14 +5,18 @@ import RxDataSources
 
 class RepositoriesViewController: UIViewController {
 
-    private let tableView: UITableView = {
-        return UITableView()
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        view.addSubview(tableView)
+        tableView.snp.makeConstraints({ $0.edges.equalToSuperview() })
+        return tableView
     }()
 
     private let viewModel: RepositoriesViewModelType
     
     private let disposeBag = DisposeBag()
-
+    private let cellIdentifier = "RepositoryInformationTableViewCell"
+    
     private lazy var dataSource = RxTableViewSectionedReloadDataSource<RepositoriesSection>(
         configureCell: { [weak self] dataSource, tableView, indexPath, item in
             guard let self = self else { return UITableViewCell() }
@@ -36,9 +40,22 @@ class RepositoriesViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureViewController()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewModel.trigger()
+    }
+    
+    private func configureViewController() {
+        configureTableView()
         configureBindings()
     }
     
+    private func configureTableView() {
+        tableView.register(RepositoryInformationTableViewCell.self, forCellReuseIdentifier: cellIdentifier)
+    }
     
     private func configureBindings() {
         let viewState = viewModel.viewState
@@ -58,7 +75,18 @@ extension RepositoriesViewController {
                                    indexPath: IndexPath, item: RepositoriesRowType) -> UITableViewCell {
         switch item {
         case .repositoryInformation(let parameters):
-            return UITableViewCell()
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: cellIdentifier,
+                for: indexPath
+                ) as? RepositoryInformationTableViewCell else { return UITableViewCell() }
+            cell.configure(
+                repositoryName: parameters.name,
+                authorName: parameters.authorName,
+                starsCount: "\(parameters.starsCount)",
+                photoUrl: parameters.photoUrl,
+                descriptionText: parameters.descriptionText
+            )
+            return cell
         }
     }
 }
