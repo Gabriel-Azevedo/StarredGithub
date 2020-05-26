@@ -5,7 +5,12 @@ struct SpacingLayout {
     static let extraSmall: CGFloat = 4.0
     static let small: CGFloat = 8.0
     static let regular: CGFloat = 16.0
-    static let image: CGFloat = 20.0
+    static let image: CGFloat = 16.0
+}
+
+struct FontSize {
+    static let small: CGFloat = 12.0
+    static let regular: CGFloat = 14.0
 }
 
 class RepositoryInformationTableViewCell: UITableViewCell {
@@ -14,7 +19,8 @@ class RepositoryInformationTableViewCell: UITableViewCell {
         let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.distribution = .fillProportionally
-        stackView.spacing = SpacingLayout.extraSmall
+        stackView.spacing = SpacingLayout.small
+        stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
 
@@ -22,6 +28,7 @@ class RepositoryInformationTableViewCell: UITableViewCell {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.spacing = SpacingLayout.extraSmall
+        stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
     
@@ -29,44 +36,51 @@ class RepositoryInformationTableViewCell: UITableViewCell {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.spacing = SpacingLayout.extraSmall
+        stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
     
     private var authorNameLabel: UILabel = {
         let label = UILabel()
+        label.textColor = .label
+        label.font = .systemFont(ofSize: FontSize.small)
         return label
     }()
     
     private var profilePhotoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.backgroundColor = .black
+        imageView.layer.cornerRadius = SpacingLayout.extraSmall
+        imageView.layer.masksToBounds = true
         //        imageView.kf
         return imageView
     }()
     
     private var repositoryNameLabel: UILabel = {
         let label = UILabel()
-        label.backgroundColor = .green
+        label.textColor = .label
+        label.font = .boldSystemFont(ofSize: FontSize.regular)
         return label
     }()
     
     private var descriptionLabel: UILabel = {
         let label = UILabel()
-        label.backgroundColor = .blue
         label.numberOfLines = .zero
+        label.textColor = .label
+        label.font = .systemFont(ofSize: FontSize.regular)
         return label
     }()
     
     private var starIconImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.backgroundColor = .yellow
-        //        imageView.kf
+        imageView.image = UIImage(named: "ic_star_filled")
         return imageView
     }()
     
     private var starCountLabel: UILabel = {
         let label = UILabel()
-        label.backgroundColor = .red
+        label.textColor = .secondaryLabel
+        label.font = .systemFont(ofSize: FontSize.regular)
         return label
     }()
     
@@ -98,7 +112,7 @@ class RepositoryInformationTableViewCell: UITableViewCell {
         mainStackView.addArrangedSubview(starCountStackView)
         starCountStackView.addArrangedSubview(starIconImageView)
         starCountStackView.addArrangedSubview(starCountLabel)
-        starIconImageView.snp.makeConstraints { make in
+        starIconImageView.snp.updateConstraints { make in
             make.width.height.equalTo(SpacingLayout.image)
         }
     }
