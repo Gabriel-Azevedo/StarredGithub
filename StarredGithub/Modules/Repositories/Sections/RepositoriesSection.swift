@@ -37,9 +37,9 @@ struct RepositoryInformationParameters: Equatable {
     
     init(repository: Repository) {
         self.name = repository.name
-        self.authorName = repository.authorName
+        self.authorName = repository.owner.name
         self.starsCount = repository.starsCount
-        self.photoUrl = repository.photoUrl
-        self.descriptionText = repository.descriptionText
+        self.photoUrl = repository.owner.photoUrl
+        self.descriptionText = repository.descriptionText ?? ""
     }
 }

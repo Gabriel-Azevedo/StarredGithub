@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 struct RepositoriesViewControllerBuilderParameters {
     let viewModel: RepositoriesViewModelType
@@ -7,10 +7,12 @@ struct RepositoriesViewControllerBuilderParameters {
 class RepositoriesViewControllerBuilder: Builder {
     
     typealias Parameters = RepositoriesViewControllerBuilderParameters
-    typealias Return = RepositoriesViewController
+    typealias Return = UINavigationController
     
     static func build(with parameters: Parameters) -> Return {
         let viewModel = parameters.viewModel
-        return RepositoriesViewController(viewModel: viewModel)
+        let repositoriesViewController = RepositoriesViewController(viewModel: viewModel)
+        let navigation = UINavigationController(rootViewController: repositoriesViewController)
+        return navigation
     }
 }

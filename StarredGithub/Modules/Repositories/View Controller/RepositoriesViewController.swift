@@ -11,12 +11,23 @@ class RepositoriesViewController: UIViewController {
         tableView.snp.makeConstraints({ $0.edges.equalToSuperview() })
         return tableView
     }()
+    
+    private lazy var loadingIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+//        view.insertSubview(indicator, at: .zero)
+        view.addSubview(indicator)
+        indicator.snp.makeConstraints { make in
+            make.centerX.centerY.equalToSuperview()
+        }
+        return indicator
+    }()
 
     private let viewModel: RepositoriesViewModelType
     
     private let disposeBag = DisposeBag()
     private let cellIdentifier = "RepositoryInformationTableViewCell"
-    
+    private var refreshControl = UIRefreshControl()
+
     private lazy var dataSource = RxTableViewSectionedReloadDataSource<RepositoriesSection>(
         configureCell: { [weak self] dataSource, tableView, indexPath, item in
             guard let self = self else { return UITableViewCell() }
@@ -43,14 +54,16 @@ class RepositoriesViewController: UIViewController {
         configureViewController()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        viewModel.trigger()
+    private func configureViewController() {
+        configureLayout()
+        configureTableView()
+        configurePullToRefresh()
+        configureBindings()
     }
     
-    private func configureViewController() {
-        configureTableView()
-        configureBindings()
+    private func configureLayout() {
+        view.backgroundColor = .systemBackground
+        navigationItem.title = "Repositories"
     }
     
     private func configureTableView() {
@@ -64,8 +77,38 @@ class RepositoriesViewController: UIViewController {
         disposeBag.insert(
             viewState.drive(rx.errorLoadingState),
             viewState.asSections()
-                .drive(tableView.rx.items(dataSource: dataSource))
+                .drive(tableView.rx.items(dataSource: dataSource)),
+            viewState.asObservable()
+                .mapToLoading()
+                .bind(to: refreshControl.rx.isRefreshing)
         )
+    }
+    
+    private func configurePullToRefresh() {
+        refreshControl.rx.controlEvent(.valueChanged).startWith(())
+            .bind(to: viewModel.fetch)
+            .disposed(by: disposeBag)
+        tableView.refreshControl = refreshControl
+        tableView.rx.willDisplayCell
+            .subscribe(onNext: { (cell, indexPath) in
+                if indexPath.row == self.tableView.numberOfRows(inSection: indexPath.section) - 1 {
+                    self.viewModel.fetch.onNext(())
+                }
+            })
+            .disposed(by: disposeBag)
+    }
+}
+
+extension Observable where Element == RepositoriesViewState {
+    func mapToLoading() -> Observable<Bool> {
+        return self.map { viewState -> Bool in
+            switch viewState {
+            case .success, .error:
+                return false
+            case .loading:
+                return true
+            }
+        }
     }
 }
 
@@ -99,11 +142,14 @@ extension RepositoriesViewController {
     fileprivate func hideErrorState() { }
     
     fileprivate func startLoading() {
-//        MBProgressHUD.showAdded(to: view, animated: true)
+        loadingIndicator.startAnimating()
+//        tableView.isHidden = true
     }
 
     fileprivate func stopLoading() {
-//        MBProgressHUD.hide(for: view, animated: true)
+        loadingIndicator.stopAnimating()
+//        tableView.isHidden = false
+        refreshControl.endRefreshing()
     }
 }
 

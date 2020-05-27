@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Moya
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -15,8 +16,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         window = UIWindow(frame: UIScreen.main.bounds)
-        let viewController = RepositoriesViewController(viewModel: RepositoriesViewModel())
-        window?.rootViewController = viewController
+        let navigationController = RepositoriesViewControllerBuilder.build(
+            with: .init(
+                viewModel: RepositoriesViewModel(
+                    service: RepositoriesService(
+                        provider: MoyaProvider<RepositoryTargetType>(plugins: [NetworkLoggerPlugin()])
+                    )
+                )
+            )
+        )
+        window?.rootViewController = navigationController
         window?.makeKeyAndVisible()
         return true
     }

@@ -2,7 +2,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-typealias RepositoriesViewState = ViewState<RepositoriesViewSuccessState, NSError, Bool>
+typealias RepositoriesViewState = ViewState<RepositoriesViewSuccessState, AppError, Bool>
 
 extension RepositoriesViewState {
     var repositories: [Repository]? {
