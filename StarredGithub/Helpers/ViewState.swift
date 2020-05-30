@@ -8,8 +8,4 @@ enum ViewState<S: Equatable, E: Error & Equatable, L: Equatable>: Equatable {
 
 enum AppError: Error, Equatable {
     case genericError
-    
-    init(error: Error) {
-        self = .genericError
-    }
 }

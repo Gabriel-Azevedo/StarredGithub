@@ -6,14 +6,10 @@ struct RepositoriesSection: SectionModelType, Equatable {
 
     var items: [RepositoriesRowType]
     
-    init(repositories: [Repository]) {
+    init(repositories: [RepositoryModel]) {
         self.items = repositories.map({ repository -> RepositoriesRowType in
             return .repositoryInformation(parameters: .init(repository: repository))
         })
-    }
-    
-    init(repository: Repository) {
-        self.items = [.repositoryInformation(parameters: .init(repository: repository))]
     }
 }
 
@@ -35,7 +31,7 @@ struct RepositoryInformationParameters: Equatable {
     let photoUrl: URL
     let descriptionText: String
     
-    init(repository: Repository) {
+    init(repository: RepositoryModel) {
         self.name = repository.name
         self.authorName = repository.owner.name
         self.starsCount = repository.starsCount

@@ -107,7 +107,7 @@ private extension RepositoriesViewController {
             repositoryInformationCell.configure(
                 repositoryName: parameters.name,
                 authorName: parameters.authorName,
-                starsCount: parameters.starsCount.formatted(),
+                starsCount: parameters.starsCount.formatted() ?? "",
                 photoUrl: parameters.photoUrl,
                 descriptionText: parameters.descriptionText
             )

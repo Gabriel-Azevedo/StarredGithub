@@ -21,7 +21,7 @@ class RepositoriesViewModel: RepositoriesViewModelType, ReactiveCompatible {
     private let language = "swift"
     private let itemPerPageCount = 30
 
-    var repositories: [Repository] = []
+    var repositories: [RepositoryModel] = []
     
     required init(service: RepositoriesServiceProtocol) {
         self.service = service
@@ -52,10 +52,16 @@ class RepositoriesViewModel: RepositoriesViewModelType, ReactiveCompatible {
         service.getRepositories(parameters: parameters)
             .do(onError: { [weak self] error in
                 guard let self = self else { return }
-                self.viewState.onNext(.error(AppError(error: error)))
+                self.viewState.onNext(.error(.genericError))
             })
             .bind(to: rx.handleFetchedRepositories)
             .disposed(by: disposeBag)
+    }
+    
+    fileprivate func handleFetchedRepositories(repositories: [RepositoryModel]) {
+        currentPage += 1
+        self.repositories.append(contentsOf: repositories)
+        viewState.onNext(.success(RepositoriesViewSuccessState(repositories: self.repositories)))
     }
 }
 
@@ -71,10 +77,9 @@ private extension Reactive where Base: RepositoriesViewModel {
     }
     
     var handleFetchedRepositories: Binder<RepositoriesResponse> {
-        return Binder(base) { controller, repositoriesList in
-            controller.currentPage += 1
-            controller.repositories.append(contentsOf: repositoriesList.repositories)
-            controller.viewState.onNext(.success(RepositoriesViewSuccessState(repositories: controller.repositories)))
+        return Binder(base) { controller, response in
+            let repositoriesModel = response.asModel()
+            controller.handleFetchedRepositories(repositories: repositoriesModel.repositories)
         }
     }
 }

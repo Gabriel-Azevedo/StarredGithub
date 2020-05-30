@@ -23,11 +23,7 @@ extension RepositoryTargetType: TargetType {
             return .get
         }
     }
-    
-    var sampleData: Data {
-        return Data()
-    }
-    
+
     var task: Task {
         switch self {
         case .getRepositories(let parameters):
@@ -37,5 +33,29 @@ extension RepositoryTargetType: TargetType {
     
     var headers: [String : String]? {
         return nil
+    }
+    
+    var sampleData: Data {
+        switch self {
+        case .getRepositories:
+            return """
+                    {
+                        \"total_count\": 1,
+                        \"incomplete_results\": false,
+                        \"items\": [
+                            {
+                                \"name\": \"StarredGithub\",
+                                \"stargazers_count\": 123,
+                                \"description\": \"A simple github app listing the most popular swift projects\",
+                                \"owner\": {
+                                    \"login\": \"GabrielAzevedo\",
+                                    \"avatar_url\": \"https://avatars2.githubusercontent.com/u/484656?v=4\"
+                                }
+                            }
+                        ]
+                    }
+                """
+                .data(using: String.Encoding.utf8)!
+        }
     }
 }
