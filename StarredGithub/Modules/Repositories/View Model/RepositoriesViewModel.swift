@@ -1,146 +1,80 @@
-import Foundation
 import RxSwift
 import RxCocoa
-import Moya
+import Foundation
 
 protocol RepositoriesViewModelType {
     var viewState: BehaviorSubject<RepositoriesViewState> { get }
-    var fetch: PublishSubject<Void> { get }
+    var fetchRepositoriesWithReset: PublishSubject<Bool> { get }
     init(service: RepositoriesServiceProtocol)
 }
 
-class RepositoriesViewModel: RepositoriesViewModelType {
+class RepositoriesViewModel: RepositoriesViewModelType, ReactiveCompatible {
     
     var viewState = BehaviorSubject<RepositoriesViewState>(value: .loading(true))
-    var fetch = PublishSubject<Void>()
-    private var currentPage = 1
+    var fetchRepositoriesWithReset = PublishSubject<Bool>()
+    
     private let disposeBag = DisposeBag()
     private var service: RepositoriesServiceProtocol
 
-    var repositories: [Repository] = [] {
-        didSet {
-            viewState.onNext(.success(RepositoriesViewSuccessState(repositories: repositories)))
-        }
-    }
+    fileprivate var currentPage = 1
+    private let sortType = "stars"
+    private let language = "swift"
+    private let itemPerPageCount = 30
 
+    var repositories: [Repository] = []
     
     required init(service: RepositoriesServiceProtocol) {
         self.service = service
-        self.configureBindings()
+        configureBindings()
     }
     
     private func configureBindings() {
-        fetch
-            .subscribe(onNext: { _ in
-                       self.fetchMostStarredRepositories()
-                   })
+        fetchRepositoriesWithReset
+            .bind(to: rx.fetchRepositories)
             .disposed(by: disposeBag)
     }
-
-    func fetchMostStarredRepositories() {
-        let repositoriesQueryParameters = RepositoriesQueryParameters(
-            query: RepositoriesQuery(language: "swift"),
-            sortType: "stars",
+    
+    fileprivate func resetRepositoriesQueryParameters() {
+        currentPage = 1
+        repositories.removeAll()
+    }
+    
+    fileprivate func getRepositoriesQueryParameters() -> RepositoriesQueryParameters {
+        return RepositoriesQueryParameters(
+            query: RepositoriesQuery(language: language),
+            sortType: sortType,
             pageNumber: currentPage,
-            itemPerPageCount: 5
+            itemPerPageCount: itemPerPageCount
         )
-        service.getRepositories(parameters: repositoriesQueryParameters)
-            .subscribe(onNext: { repositoriesList in
-                self.repositories.append(contentsOf: repositoriesList.repositories)
-            }, onError: { error in
-//                self.viewState.onNext(.error(AppError(error: error)))
+    }
+
+    fileprivate func fetchMostStarredRepositories(with parameters: RepositoriesQueryParameters) {
+        service.getRepositories(parameters: parameters)
+            .do(onError: { [weak self] error in
+                guard let self = self else { return }
+                self.viewState.onNext(.error(AppError(error: error)))
             })
+            .bind(to: rx.handleFetchedRepositories)
             .disposed(by: disposeBag)
     }
 }
 
-struct RepositoriesQueryParameters: Codable {
-    let query: RepositoriesQuery
-    let sortType: String
-    let pageNumber: Int
-    let itemPerPageCount: Int
-    
-    func toDictionary() -> [String: Any] {
-        return [
-            "q": query.toString(),
-            "sort": sortType,
-            "page": pageNumber,
-            "per_page": itemPerPageCount
-        ]
-    }
-}
-
-struct RepositoriesQuery: Codable {
-    let language: String
-    
-    func toString() -> String {
-        return "language:\(language)"
-    }
-}
-
-protocol RepositoriesServiceProtocol {
-    init(provider: MoyaProvider<RepositoryTargetType>)
-    func getRepositories(parameters: RepositoriesQueryParameters) -> Observable<RepositoriesResponse>
-}
-
-class RepositoriesService: RepositoriesServiceProtocol {
-    private let provider: MoyaProvider<RepositoryTargetType>
-    
-    required init(provider: MoyaProvider<RepositoryTargetType>) {
-        self.provider = provider
-    }
-
-    func getRepositories(parameters: RepositoriesQueryParameters) -> Observable<RepositoriesResponse> {
-        return provider.rx.request(.getRepositories(parameters: parameters))
-            .map(RepositoriesResponse.self)
-            .asObservable()
-    }
-}
-
-extension ObservableType where Element == Moya.Response {
-    func map<T: Decodable>(_ type: T.Type) -> Observable<T> {
-        return flatMap { (response : Response) -> Observable<T> in
-            return Observable.just(try response.map(type))
-        }
-    }
-}
-
-
-enum RepositoryTargetType {
-    case getRepositories(parameters: RepositoriesQueryParameters)
-}
-
-extension RepositoryTargetType: TargetType {
-    var baseURL: URL {
-        return URL(string: "https://api.github.com")!
-    }
-    
-    var path: String {
-        switch self {
-        case .getRepositories:
-            return "/search/repositories"
+private extension Reactive where Base: RepositoriesViewModel {
+    var fetchRepositories: Binder<Bool> {
+        return Binder(base) { controller, reset in
+            if reset {
+                controller.resetRepositoriesQueryParameters()
+            }
+            let parameters = controller.getRepositoriesQueryParameters()
+            controller.fetchMostStarredRepositories(with: parameters)
         }
     }
     
-    var method: Moya.Method {
-        switch self {
-        case .getRepositories:
-            return .get
+    var handleFetchedRepositories: Binder<RepositoriesResponse> {
+        return Binder(base) { controller, repositoriesList in
+            controller.currentPage += 1
+            controller.repositories.append(contentsOf: repositoriesList.repositories)
+            controller.viewState.onNext(.success(RepositoriesViewSuccessState(repositories: controller.repositories)))
         }
-    }
-    
-    var sampleData: Data {
-        return Data()
-    }
-    
-    var task: Task {
-        switch self {
-        case .getRepositories(let parameters):
-            return .requestParameters(parameters: parameters.toDictionary(), encoding: URLEncoding.default)
-        }
-    }
-    
-    var headers: [String : String]? {
-        return nil
     }
 }

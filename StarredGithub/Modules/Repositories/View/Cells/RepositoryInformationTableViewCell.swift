@@ -1,5 +1,6 @@
 import UIKit
 import SnapKit
+import AlamofireImage
 
 struct SpacingLayout {
     static let extraSmall: CGFloat = 4.0
@@ -94,6 +95,8 @@ class RepositoryInformationTableViewCell: UITableViewCell {
     }
     
     private func configureSubviews() {
+        selectionStyle = .none
+
         contentView.addSubview(mainStackView)
         mainStackView.snp.makeConstraints({ make in
             make.edges.equalToSuperview().inset(SpacingLayout.regular)
@@ -122,6 +125,7 @@ class RepositoryInformationTableViewCell: UITableViewCell {
         authorNameLabel.text = authorName
         starCountLabel.text = starsCount
         descriptionLabel.text = descriptionText
+        profilePhotoImageView.af.setImage(withURL: photoUrl)
         layoutIfNeeded()
     }
 }

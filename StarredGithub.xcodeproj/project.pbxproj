@@ -22,6 +22,11 @@
 		23A72A79247CA5080042001B /* RepositoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A72A78247CA5080042001B /* RepositoryModel.swift */; };
 		23A72A7C247CA52B0042001B /* RepositoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A72A7B247CA52B0042001B /* RepositoryAdapter.swift */; };
 		23A72A80247CAA4B0042001B /* RepositoryInformationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A72A7F247CAA4B0042001B /* RepositoryInformationTableViewCell.swift */; };
+		23F6CC782482B60300E5157A /* Int+Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F6CC772482B60300E5157A /* Int+Formatter.swift */; };
+		23F6CC7B2482B67800E5157A /* RepositoriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F6CC7A2482B67800E5157A /* RepositoriesService.swift */; };
+		23F6CC7E2482B6A200E5157A /* RepositoryTargetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F6CC7D2482B6A200E5157A /* RepositoryTargetType.swift */; };
+		23F6CC802482B70200E5157A /* MoyaResponse+Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F6CC7F2482B70200E5157A /* MoyaResponse+Mapping.swift */; };
+		23F6CC822482B71B00E5157A /* RepositoriesQueryParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F6CC812482B71B00E5157A /* RepositoriesQueryParameters.swift */; };
 		D791052C94E7F1651AABDFF7 /* Pods_StarredGithubTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3EF83764C85150221AA553C6 /* Pods_StarredGithubTests.framework */; };
 		E97F3303787001C1F58DB577 /* Pods_StarredGithub.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6467BD6B3057805E79BCFCD /* Pods_StarredGithub.framework */; };
 /* End PBXBuildFile section */
@@ -69,6 +74,11 @@
 		23A72A78247CA5080042001B /* RepositoryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryModel.swift; sourceTree = "<group>"; };
 		23A72A7B247CA52B0042001B /* RepositoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryAdapter.swift; sourceTree = "<group>"; };
 		23A72A7F247CAA4B0042001B /* RepositoryInformationTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryInformationTableViewCell.swift; sourceTree = "<group>"; };
+		23F6CC772482B60300E5157A /* Int+Formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Formatter.swift"; sourceTree = "<group>"; };
+		23F6CC7A2482B67800E5157A /* RepositoriesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoriesService.swift; sourceTree = "<group>"; };
+		23F6CC7D2482B6A200E5157A /* RepositoryTargetType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryTargetType.swift; sourceTree = "<group>"; };
+		23F6CC7F2482B70200E5157A /* MoyaResponse+Mapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MoyaResponse+Mapping.swift"; sourceTree = "<group>"; };
+		23F6CC812482B71B00E5157A /* RepositoriesQueryParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoriesQueryParameters.swift; sourceTree = "<group>"; };
 		3EF83764C85150221AA553C6 /* Pods_StarredGithubTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_StarredGithubTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AF47C807A07886805520ADD /* Pods-StarredGithubTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarredGithubTests.release.xcconfig"; path = "Target Support Files/Pods-StarredGithubTests/Pods-StarredGithubTests.release.xcconfig"; sourceTree = "<group>"; };
 		B6467BD6B3057805E79BCFCD /* Pods_StarredGithub.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_StarredGithub.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -179,6 +189,8 @@
 			children = (
 				23A72A5B247C8D430042001B /* BuilderProtocol.swift */,
 				23A72A72247CA48D0042001B /* ViewState.swift */,
+				23F6CC772482B60300E5157A /* Int+Formatter.swift */,
+				23F6CC7F2482B70200E5157A /* MoyaResponse+Mapping.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -194,6 +206,7 @@
 		23A72A5F247C92D60042001B /* Repositories */ = {
 			isa = PBXGroup;
 			children = (
+				23F6CC792482B66900E5157A /* Service */,
 				23A72A7D247CAA310042001B /* View */,
 				23A72A7A247CA5150042001B /* Adapter */,
 				23A72A77247CA4F80042001B /* Models */,
@@ -242,6 +255,7 @@
 			isa = PBXGroup;
 			children = (
 				23A72A78247CA5080042001B /* RepositoryModel.swift */,
+				23F6CC812482B71B00E5157A /* RepositoriesQueryParameters.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -268,6 +282,15 @@
 				23A72A7F247CAA4B0042001B /* RepositoryInformationTableViewCell.swift */,
 			);
 			path = Cells;
+			sourceTree = "<group>";
+		};
+		23F6CC792482B66900E5157A /* Service */ = {
+			isa = PBXGroup;
+			children = (
+				23F6CC7A2482B67800E5157A /* RepositoriesService.swift */,
+				23F6CC7D2482B6A200E5157A /* RepositoryTargetType.swift */,
+			);
+			path = Service;
 			sourceTree = "<group>";
 		};
 		82BA589582A872E088894EE3 /* Pods */ = {
@@ -497,16 +520,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				23A72A6C247CA39C0042001B /* RepositoriesViewControllerBuilder.swift in Sources */,
+				23F6CC802482B70200E5157A /* MoyaResponse+Mapping.swift in Sources */,
 				23A72A75247CA4D30042001B /* RepositoriesSection.swift in Sources */,
+				23F6CC7E2482B6A200E5157A /* RepositoryTargetType.swift in Sources */,
 				23A72A73247CA48D0042001B /* ViewState.swift in Sources */,
 				23A72A79247CA5080042001B /* RepositoryModel.swift in Sources */,
 				23A72A5C247C8D430042001B /* BuilderProtocol.swift in Sources */,
 				23A72A6F247CA42F0042001B /* RepositoriesViewState.swift in Sources */,
 				23A72A2F247C8A180042001B /* RepositoriesViewController.swift in Sources */,
 				23A72A6A247CA3840042001B /* RepositoriesViewModel.swift in Sources */,
+				23F6CC822482B71B00E5157A /* RepositoriesQueryParameters.swift in Sources */,
+				23F6CC782482B60300E5157A /* Int+Formatter.swift in Sources */,
 				23A72A2B247C8A180042001B /* AppDelegate.swift in Sources */,
 				23A72A7C247CA52B0042001B /* RepositoryAdapter.swift in Sources */,
 				23A72A80247CAA4B0042001B /* RepositoryInformationTableViewCell.swift in Sources */,
+				23F6CC7B2482B67800E5157A /* RepositoriesService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2,6 +2,7 @@ import UIKit
 import RxSwift
 import RxCocoa
 import RxDataSources
+import MBProgressHUD
 
 class RepositoriesViewController: UIViewController {
 
@@ -11,23 +12,14 @@ class RepositoriesViewController: UIViewController {
         tableView.snp.makeConstraints({ $0.edges.equalToSuperview() })
         return tableView
     }()
-    
-    private lazy var loadingIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .large)
-//        view.insertSubview(indicator, at: .zero)
-        view.addSubview(indicator)
-        indicator.snp.makeConstraints { make in
-            make.centerX.centerY.equalToSuperview()
-        }
-        return indicator
-    }()
 
     private let viewModel: RepositoriesViewModelType
     
     private let disposeBag = DisposeBag()
     private let cellIdentifier = "RepositoryInformationTableViewCell"
     private var refreshControl = UIRefreshControl()
-
+    private let reloadThresholdRow = 3
+    
     private lazy var dataSource = RxTableViewSectionedReloadDataSource<RepositoriesSection>(
         configureCell: { [weak self] dataSource, tableView, indexPath, item in
             guard let self = self else { return UITableViewCell() }
@@ -72,34 +64,122 @@ class RepositoriesViewController: UIViewController {
     
     private func configureBindings() {
         let viewState = viewModel.viewState
-            .asDriver(onErrorDriveWith: .empty())
+            .asDriver(onErrorDriveWith: .empty()).debug()
+        
+        let tableViewWillDisplayCell = tableView.rx.willDisplayCell
+            .filterThreshold(in: tableView, reloadThresholdRow: reloadThresholdRow)
+            .shouldReset(false)
+            .bind(to: viewModel.fetchRepositoriesWithReset)
         
         disposeBag.insert(
             viewState.drive(rx.errorLoadingState),
-            viewState.asSections()
+            viewState.filterSuccessState()
+                .asSections()
                 .drive(tableView.rx.items(dataSource: dataSource)),
             viewState.asObservable()
                 .mapToLoading()
-                .bind(to: refreshControl.rx.isRefreshing)
+                .bind(to: refreshControl.rx.isRefreshing),
+            tableViewWillDisplayCell
         )
     }
-    
+
     private func configurePullToRefresh() {
-        refreshControl.rx.controlEvent(.valueChanged).startWith(())
-            .bind(to: viewModel.fetch)
+        refreshControl.rx.controlEvent(.valueChanged)
+            .startWith(())
+            .shouldReset(true)
+            .bind(to: viewModel.fetchRepositoriesWithReset)
             .disposed(by: disposeBag)
         tableView.refreshControl = refreshControl
-        tableView.rx.willDisplayCell
-            .subscribe(onNext: { (cell, indexPath) in
-                if indexPath.row == self.tableView.numberOfRows(inSection: indexPath.section) - 1 {
-                    self.viewModel.fetch.onNext(())
-                }
-            })
-            .disposed(by: disposeBag)
     }
 }
 
-extension Observable where Element == RepositoriesViewState {
+// MARK: - Table View Methods
+private extension RepositoriesViewController {
+    private func cellConfiguration(dataSource: UITableViewDataSource, tableView: UITableView,
+                                   indexPath: IndexPath, item: RepositoriesRowType) -> UITableViewCell {
+        switch item {
+        case .repositoryInformation(let parameters):
+            let cell = tableView.dequeueReusableCell(
+                withIdentifier: cellIdentifier,
+                for: indexPath
+            )
+            guard let repositoryInformationCell = cell as? RepositoryInformationTableViewCell else { return cell }
+            repositoryInformationCell.configure(
+                repositoryName: parameters.name,
+                authorName: parameters.authorName,
+                starsCount: parameters.starsCount.formatted(),
+                photoUrl: parameters.photoUrl,
+                descriptionText: parameters.descriptionText
+            )
+            return repositoryInformationCell
+        }
+    }
+}
+
+// MARK: - View State's States Handling
+fileprivate extension RepositoriesViewController {
+    func showErrorState(error: AppError) {
+        let progressHud = MBProgressHUD.showAdded(to: view, animated: true)
+        progressHud.label.text = error.localizedDescription
+        progressHud.mode = .text
+        progressHud.label.numberOfLines = .zero
+        progressHud.hide(animated: true, afterDelay: 2.0)
+    }
+
+    func startLoading() {
+        MBProgressHUD.showAdded(to: view, animated: true)
+    }
+
+    func stopLoading() {
+        refreshControl.endRefreshing()
+        MBProgressHUD.hide(for: view, animated: true)
+    }
+}
+
+// MARK: - Reactive Methods
+private extension Reactive where Base: RepositoriesViewController {
+    var errorLoadingState: Binder<RepositoriesViewState> {
+        return Binder(base) { controller, state in
+            switch state {
+            case .loading:
+                controller.startLoading()
+            case .error(let error):
+                controller.stopLoading()
+                controller.showErrorState(error: error)
+            case .success:
+                controller.stopLoading()
+            }
+        }
+    }
+}
+
+// MARK: - SharedSequence Helper Methods
+private extension SharedSequenceConvertibleType where Element == RepositoriesViewState {
+    func filterSuccessState() -> SharedSequence<SharingStrategy, RepositoriesViewState> {
+        return self.filter { state -> Bool in
+            switch state {
+            case .success:
+                return true
+            case .loading, .error:
+                return false
+            }
+        }
+    }
+}
+
+// MARK: - ControlEvent Helper Methods
+private extension ControlEvent where Element == WillDisplayCellEvent {
+    func filterThreshold(in tableView: UITableView, reloadThresholdRow: Int) -> Observable<WillDisplayCellEvent> {
+        return self.filter({ (cell, indexPath) -> Bool in
+            let numberOfRows = tableView.numberOfRows(inSection: indexPath.section)
+            let currentThreshold = numberOfRows > reloadThresholdRow ? numberOfRows - reloadThresholdRow : 0
+            return indexPath.row == currentThreshold
+        })
+    }
+}
+
+// MARK: - Observable Helper Methods
+private extension ObservableType where Element == RepositoriesViewState {
     func mapToLoading() -> Observable<Bool> {
         return self.map { viewState -> Bool in
             switch viewState {
@@ -112,61 +192,8 @@ extension Observable where Element == RepositoriesViewState {
     }
 }
 
-// MARK: - Table View Methods
-extension RepositoriesViewController {
-    private func cellConfiguration(dataSource: UITableViewDataSource, tableView: UITableView,
-                                   indexPath: IndexPath, item: RepositoriesRowType) -> UITableViewCell {
-        switch item {
-        case .repositoryInformation(let parameters):
-            guard let cell = tableView.dequeueReusableCell(
-                withIdentifier: cellIdentifier,
-                for: indexPath
-                ) as? RepositoryInformationTableViewCell else { return UITableViewCell() }
-            cell.configure(
-                repositoryName: parameters.name,
-                authorName: parameters.authorName,
-                starsCount: "\(parameters.starsCount)",
-                photoUrl: parameters.photoUrl,
-                descriptionText: parameters.descriptionText
-            )
-            return cell
-        }
-    }
-}
-
-// MARK: - View State's States Handling
-extension RepositoriesViewController {
-    fileprivate func showErrorState() {
-    }
-    
-    fileprivate func hideErrorState() { }
-    
-    fileprivate func startLoading() {
-        loadingIndicator.startAnimating()
-//        tableView.isHidden = true
-    }
-
-    fileprivate func stopLoading() {
-        loadingIndicator.stopAnimating()
-//        tableView.isHidden = false
-        refreshControl.endRefreshing()
-    }
-}
-
-// MARK: - Reactive Methods
-extension Reactive where Base: RepositoriesViewController {
-    var errorLoadingState: Binder<RepositoriesViewState> {
-        return Binder(base) { controller, state in
-            switch state {
-            case .loading:
-                controller.startLoading()
-            case .error:
-                controller.showErrorState()
-                controller.stopLoading()
-            case .success:
-                controller.hideErrorState()
-                controller.stopLoading()
-            }
-        }
+private extension ObservableType {
+    func shouldReset(_ reset: Bool) -> Observable<Bool> {
+        return self.map { _ in reset }
     }
 }
